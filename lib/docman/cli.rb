@@ -117,19 +117,52 @@ module Docman
     end
 
     no_commands {
-      def current_dir_has_config_dir
+      def current_dir_has_config_dir?
         File.directory?('config')
       end
 
+      def dir_has_config_dir?(dir)
+        File.directory?(File.join(dir, 'config'))
+      end
+
       def config_dir?
-        raise 'ERROR: No config directory in docroot' unless current_dir_has_config_dir
+        raise 'ERROR: No config directory in docroot' unless current_dir_has_config_dir?
+      end
+
+      def dir_is_root?(dir)
+        if dir == '/'
+          true
+        else
+          false
+        end
       end
 
       def get_to_root_dir
-        until current_dir_has_config_dir
-          raise 'ERROR: No config directory in docroot' if File.basename(Dir.pwd) == '/'
-          Dir.chdir('..')
+        config_dir = nil
+        i = 0
+        depth = Dir.pwd.scan(/[^\/]+/).size
+
+        until i > depth do
+          dir = File.absolute_path(File.join(Dir.pwd, Array.new(i, '..')))
+          unless dir_is_root? dir
+            if dir_has_config_dir? dir
+              config_dir = dir
+              break
+            end
+          else
+            break
+          end
+          i = i + 1
         end
+
+        unless config_dir.nil?
+          Dir.chdir(config_dir)
+        else
+          unless options.key? 'config'
+            raise 'ERROR: No config directory in docroot'
+          end
+        end
+
       end
     }
   end

@@ -22,12 +22,12 @@ module Docman
             if self['source_type'] == 'file'
               yaml_file_name = self['yaml_file_name'].nil? ? '{unipipe,.unipipe,drupipe,.drupipe,build,.build}.{yaml,yml}' : self['yaml_file_name']
               search_pathes = []
-              if @context['name'] == 'master'
+              if @context['name'] == 'master' and not @context['docroot_config'].config_dir.nil?
                 search_pathes.push File.join(@context['docroot_config'].config_dir, yaml_file_name)
               end
               search_pathes.push File.join(@context['full_build_path'], yaml_file_name)
               build_file = Dir.glob(search_pathes).first
-              if not build_file.nil?
+              unless build_file.nil?
                 build_file_yaml = YAML::load_file(build_file)
                 commands = build_file_yaml[self['stage']]
                 source = yaml_file_name
